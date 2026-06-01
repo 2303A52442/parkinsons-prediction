@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Parkinson's Prediction</title>
+    <style>
+      body{font-family:Arial,Helvetica,sans-serif;max-width:900px;margin:24px auto;padding:0 16px}
+      label{display:block;margin-top:8px}
+      .row{display:flex;gap:8px}
+      .col{flex:1}
+      .result{margin-top:16px;padding:12px;background:#f3f3f3;border-radius:6px}
+    </style>
+  </head>
+  <body>
+    <h1>Parkinson's disease prediction</h1>
+    <p>Fill the 22 features below (use dataset column order). Then click Predict.</p>
+
+    <form id="predict-form">
+      <div id="fields"></div>
+      <button type="submit">Predict</button>
+    </form>
+
+    <div class="result" id="result" style="display:none"></div>
+
+    <script>
+      const features = [
+        'MDVP:Fo(Hz)','MDVP:Fhi(Hz)','MDVP:Flo(Hz)','MDVP:Jitter(%)','MDVP:Jitter(Abs)','MDVP:RAP','MDVP:PPQ','Jitter:DDP','MDVP:Shimmer','MDVP:Shimmer(dB)','Shimmer:APQ3','Shimmer:APQ5','MDVP:APQ','Shimmer:DDA','NHR','HNR','RPDE','DFA','spread1','spread2','D2','PPE'
+      ];
+
+      const fieldsDiv = document.getElementById('fields');
+      features.forEach((f, i) => {
+        const id = 'f' + i;
+        const wrapper = document.createElement('div');
+        wrapper.className = 'row';
+        wrapper.innerHTML = `<label class="col"><strong>${f}</strong><input id="${id}" name="${id}" type="number" step="any" required class="col"/></label>`;
+        fieldsDiv.appendChild(wrapper);
+      });
+
+      document.getElementById('predict-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const vals = features.map((_, i) => parseFloat(document.getElementById('f'+i).value));
+        const resDiv = document.getElementById('result');
+        resDiv.style.display = 'block';
+        resDiv.textContent = 'Predicting...';
+
+        try{
+          const resp = await fetch('/predict', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({features: vals})
+          });
+          const data = await resp.json();
+          resDiv.innerHTML = '<pre>'+JSON.stringify(data, null, 2)+'</pre>';
+        }catch(err){
+          resDiv.textContent = 'Error: '+err;
+        }
+      });
+    </script>
+  </body>
+</html>
